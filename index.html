@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Planner MVP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f5f1;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #ffc1cc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #ffe4e1;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: #ff6f91;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1, h2 {
+            color: #ff6f91;
+        }
+        button {
+            background-color: #ff6f91;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #e55a76;
+        }
+        .section {
+            margin-bottom: 30px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #ffc1cc;
+            color: white;
+        }
+        .draggable {
+            cursor: grab;
+        }
+        .droppable {
+            border: 2px dashed #ff6f91;
+            padding: 10px;
+            margin: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Wedding Planner</h1>
+        <p>Planifica tu boda con facilidad</p>
+    </header>
+    <nav>
+        <a href="#" onclick="navigateTo('basic-details')">Inicio</a>
+        <a href="#" onclick="navigateTo('manage-guests')">Invitados</a>
+        <a href="#" onclick="navigateTo('manage-tables')">Mesas</a>
+        <a href="#" onclick="navigateTo('ceremony-management')">Ceremonias</a>
+        <a href="#" onclick="navigateTo('banquet-management')">Convite</a>
+        <a href="#" onclick="navigateTo('summary')">Resumen</a>
+    </nav>
+    <div class="container">
+        <!-- Section for adding basic wedding details -->
+        <div class="section" id="basic-details" style="display:block;">
+            <h2>1. Introduce los detalles básicos</h2>
+            <form>
+                <label for="wedding-date">Fecha de la boda:</label><br>
+                <input type="date" id="wedding-date" name="wedding-date" required><br><br>
+
+                <label for="guest-count">Número total de invitados:</label><br>
+                <input type="number" id="guest-count" name="guest-count" required><br><br>
+
+                <button type="button" onclick="startPlanning()">Comenzar</button>
+            </form>
+        </div>
+
+        <!-- Section for managing guests -->
+        <div class="section" id="manage-guests">
+            <h2>2. Gestión de Invitados</h2>
+            <table id="guest-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Personas Adicionales</th>
+                        <th>Confirmación</th>
+                        <th>Mesa</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Guest rows will be dynamically added here -->
+                </tbody>
+            </table>
+            <button onclick="addGuest()">Añadir Invitado</button>
+        </div>
+
+        <!-- Section for table assignments -->
+        <div class="section" id="manage-tables">
+            <h2>3. Organización de Mesas</h2>
+            <p>Arrastra los invitados a las mesas disponibles:</p>
+            <div id="table-summary" class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <!-- Tables and assigned guests will go here -->
+            </div>
+        </div>
+
+        <!-- Section for summary -->
+        <div class="section" id="summary">
+            <h2>Resumen Consolidado</h2>
+            <p>Descarga los detalles de tu planificación:</p>
+            <button onclick="exportToPDF()">Descargar PDF</button>
+            <button onclick="exportToExcel()">Descargar Excel</button>
+        </div>
+    </div>
+
+    <script>
+        let guests = [];
+
+        function navigateTo(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        function startPlanning() {
+            navigateTo('manage-guests');
+        }
+
+        function addGuest() {
+            const table = document.getElementById('guest-table').querySelector('tbody');
+            const row = table.insertRow();
+
+            const nameCell = row.insertCell(0);
+            const additionalCell = row.insertCell(1);
+            const confirmationCell = row.insertCell(2);
+            const tableCell = row.insertCell(3);
+            const actionsCell = row.insertCell(4);
+
+            nameCell.textContent = "Invitado Nuevo";
+            nameCell.setAttribute('contenteditable', 'true');
+
+            additionalCell.textContent = 0;
+            additionalCell.setAttribute('contenteditable', 'true');
+
+            confirmationCell.textContent = "Pendiente";
+            confirmationCell.setAttribute('contenteditable', 'true');
+
+            tableCell.textContent = "Sin Asignar";
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = "Eliminar";
+            deleteButton.onclick = () => row.remove();
+
+            actionsCell.appendChild(deleteButton);
+
+            row.setAttribute('draggable', 'true');
+            row.ondragstart = drag;
+
+            guests.push({ name: "Invitado Nuevo", additional: 0, confirmation: "Pendiente", table: "Sin Asignar" });
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.rowIndex);
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const data = event.dataTransfer.getData("text");
+            const row = document.getElementById('guest-table').rows[data];
+            event.target.appendChild(row);
+        }
+
+        function exportToPDF() {
+            alert("Función de exportación a PDF en desarrollo.");
+        }
+
+        function exportToExcel() {
+            alert("Función de exportación a Excel en desarrollo.");
+        }
+    </script>
+</body>
+</html>
